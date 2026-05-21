@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PowerBlock — Entrenamiento de Fuerza</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #ebebea;
+    --txt: #1a1a18; --txt2: #6b6b67; --txt3: #9a9a96;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --accent: #1D9E75; --accent-light: #E1F5EE; --accent-mid: #9FE1CB; --accent-dark: #085041;
+    --danger: #D85A30; --danger-light: #FAECE7;
+    --warn: #BA7517; --warn-light: #FAEEDA;
+    --blue: #185FA5; --blue-light: #E6F1FB;
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --txt: #f0f0ec; --txt2: #a0a09a; --txt3: #6b6b65;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --accent-light: #04342C; --accent-mid: #085041; --accent-dark: #9FE1CB;
+      --danger-light: #4A1B0C; --warn-light: #412402;
+      --blue-light: #042C53; --purple-light: #26215C; --purple-dark: #CECBF6;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--txt); font-size: 16px; }
+  #app { max-width: 430px; margin: 0 auto; background: var(--bg); min-height: 100dvh; display: flex; flex-direction: column; position: relative; }
+
+  /* NAV */
+  .nav { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 12px 16px 10px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .nav-logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .nav-badge { background: var(--accent); color: #fff; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+
+  /* TABS */
+  .tabs { display: flex; background: var(--bg); border-bottom: 0.5px solid var(--border); position: sticky; top: 46px; z-index: 49; }
+  .tab { flex: 1; padding: 8px 2px 10px; text-align: center; font-size: 10px; color: var(--txt3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; user-select: none; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab svg { display: block; margin: 0 auto 3px; width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* SCREENS */
+  .screen { display: none; flex: 1; padding: 14px 14px 100px; overflow-y: auto; }
+  .screen.active { display: block; }
+
+  /* COMPONENTS */
+  .section-label { font-size: 11px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: 0.6px; margin: 18px 0 8px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+  .card-accent { border-left: 3px solid var(--accent); }
+  .flex { display: flex; align-items: center; gap: 10px; }
+  .flex-sb { display: flex; align-items: center; justify-content: space-between; }
+  .icon-box { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
+  .title { font-size: 15px; font-weight: 600; color: var(--txt); }
+  .sub { font-size: 13px; color: var(--txt2); margin-top: 2px; }
+  .right-val { margin-left: auto; text-align: right; }
+  .right-val .v { font-size: 17px; font-weight: 600; color: var(--txt); }
+  .right-val .u { font-size: 12px; color: var(--txt2); }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; }
+  .tag-g { background: var(--accent-light); color: var(--accent-dark); }
+  .tag-b { background: var(--blue-light); color: #0C447C; }
+  .tag-o { background: var(--warn-light); color: #633806; }
+  .tag-r { background: var(--danger-light); color: #711B13; }
+  .tag-p { background: var(--purple-light); color: var(--purple-dark); }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--purple-light); color: var(--purple-dark); font-size: 12px; font-weight: 600; padding: 5px 13px; border-radius: 20px; margin-bottom: 6px; }
+
+  .progress-wrap { background: var(--bg2); border-radius: 100px; height: 5px; margin-top: 8px; }
+  .progress-fill { height: 5px; border-radius: 100px; background: var(--accent); transition: width 0.5s; }
+
+  .ex-item { background: var(--bg2); border-radius: 10px; padding: 12px 13px; margin-bottom: 8px; cursor: pointer; active: background var(--bg3); }
+  .ex-item:active { background: var(--bg3); }
+  .ex-name { font-size: 14px; font-weight: 600; color: var(--txt); }
+  .ex-detail { font-size: 13px; color: var(--txt2); margin-top: 3px; }
+  .ex-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+
+  .day-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer; user-select: none; }
+  .day-name { font-size: 15px; font-weight: 600; color: var(--txt); }
+  .day-type { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+  .chevron { transition: transform 0.2s; font-size: 18px; color: var(--txt2); }
+  .chevron.open { transform: rotate(180deg); }
+
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .metric-card { background: var(--bg2); border-radius: var(--radius-sm); padding: 13px; text-align: center; }
+  .metric-val { font-size: 24px; font-weight: 700; color: var(--txt); }
+  .metric-label { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+  .metric-delta { font-size: 12px; color: var(--accent); margin-top: 2px; font-weight: 500; }
+
+  .btn { width: 100%; padding: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: var(--bg); color: var(--txt); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+  .btn:active { background: var(--bg2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
+  .btn-primary:active { background: #0F6E56; }
+
+  .label { font-size: 13px; color: var(--txt2); margin-bottom: 5px; display: block; }
+  input[type=number], input[type=text], select {
+    width: 100%; padding: 10px 12px; border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); font-size: 15px; background: var(--bg); color: var(--txt);
+    -webkit-appearance: none; appearance: none; margin-bottom: 0;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b6b67' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .input-row { margin-bottom: 10px; }
+  .sets-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+  .log-entry { border-left: 2px solid var(--accent); padding: 8px 12px; margin-bottom: 8px; background: var(--bg2); border-radius: 0 8px 8px 0; }
+  .log-date { font-size: 12px; color: var(--txt2); }
+  .log-val { font-size: 15px; font-weight: 600; color: var(--txt); margin-top: 2px; }
+  .log-note { font-size: 13px; color: var(--txt2); margin-top: 2px; }
+
+  .e1rm-box { background: linear-gradient(135deg, var(--accent-light) 0%, var(--blue-light) 100%); border-radius: var(--radius); padding: 18px; text-align: center; margin: 12px 0; }
+  .e1rm-val { font-size: 36px; font-weight: 700; color: var(--accent-dark); }
+  .e1rm-label { font-size: 13px; color: var(--accent); margin-top: 3px; }
+  .e1rm-formula { font-size: 11px; color: var(--txt2); margin-top: 6px; }
+
+  .rep-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .rep-cell { background: var(--bg2); border-radius: 8px; padding: 9px 4px; text-align: center; }
+  .rep-cell .reps { font-size: 11px; color: var(--txt2); }
+  .rep-cell .weight { font-size: 13px; font-weight: 600; color: var(--txt); margin-top: 1px; }
+
+  .rpe-scale { display: flex; gap: 4px; margin-top: 8px; }
+  .rpe-dot { flex: 1; height: 10px; border-radius: 100px; cursor: pointer; transition: transform 0.15s; }
+  .rpe-dot.selected { transform: scaleY(1.6); }
+  .rpe-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--txt2); margin-top: 5px; }
+
+  .fb-card { border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+  .fb-card.good { background: var(--accent-light); border: 0.5px solid var(--accent-mid); }
+  .fb-card.warn { background: var(--warn-light); border: 0.5px solid #FAC775; }
+  .fb-card.info { background: var(--blue-light); border: 0.5px solid #B5D4F4; }
+  .fb-title { font-size: 14px; font-weight: 600; }
+  .fb-card.good .fb-title { color: var(--accent-dark); }
+  .fb-card.warn .fb-title { color: #633806; }
+  .fb-card.info .fb-title { color: #0C447C; }
+  .fb-body { font-size: 13px; margin-top: 4px; line-height: 1.5; }
+  .fb-card.good .fb-body { color: #0F6E56; }
+  .fb-card.warn .fb-body { color: #854F0B; }
+  .fb-card.info .fb-body { color: #185FA5; }
+
+  .timer-display { text-align: center; font-size: 52px; font-weight: 700; color: var(--txt); letter-spacing: -2px; margin: 16px 0 6px; font-variant-numeric: tabular-nums; }
+  .timer-lbl { text-align: center; font-size: 13px; color: var(--txt2); margin-bottom: 16px; }
+  .timer-presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px; }
+  .timer-btn { padding: 8px 0; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: var(--bg2); color: var(--txt); font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; }
+  .timer-btn.active-preset { background: var(--accent); color: #fff; border-color: transparent; }
+
+  .chart-wrap { background: var(--bg2); border-radius: 10px; padding: 14px; height: 160px; display: flex; align-items: flex-end; gap: 8px; overflow: hidden; }
+  .chart-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 4px; }
+  .chart-lbl { font-size: 10px; color: var(--txt2); }
+  .chart-val-lbl { font-size: 10px; font-weight: 600; color: var(--accent); }
+
+  .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
+
+  /* Bottom padding for content above tab bar */
+  .tab-bar-spacer { height: 20px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-logo">💪 PowerBlock</div>
+    <div class="nav-badge">Bloque 1 · Sem 1</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('today')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Hoy
+    </div>
+    <div class="tab" onclick="showTab('program')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Programa
+    </div>
+    <div class="tab" onclick="showTab('log')">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Registrar
+    </div>
+    <div class="tab" onclick="showTab('progress')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progreso
+    </div>
+    <div class="tab" onclick="showTab('tools')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Tools
+    </div>
+  </div>
+
+  <!-- HOY -->
+  <div class="screen active" id="screen-today">
+    <div class="pill">🏁 Bloque 1: Acumulación — Semana 1 / 4</div>
+    <div class="progress-wrap" style="margin-bottom:16px;margin-top:4px"><div class="progress-fill" style="width:12%"></div></div>
+
+    <div class="section-label">Sesión de hoy</div>
+    <div class="card card-accent">
+      <div class="flex">
+        <div class="icon-box" style="background:var(--accent-light)">🏋️</div>
+        <div>
+          <div class="title">Lunes — Piernas (Squat)</div>
+          <div class="sub">Ejercicio principal: Sentadilla · ~90 min</div>
+        </div>
+        <div class="right-val"><span class="tag tag-g">Hoy</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">Ejercicios de hoy</div>
+
+    <div class="ex-item" onclick="goLog('Sentadilla')">
+      <div class="flex-sb"><div class="ex-name">A. Sentadilla</div><span class="tag tag-p">Principal</span></div>
+      <div class="ex-detail">4 × 5 @ RPE 7–8 · Descanso: 4 min</div>
+      <div class="ex-tags"><span class="tag tag-g">Fuerza</span><span class="tag tag-b">Cuádriceps</span><span class="tag tag-b">Glúteos</span></div>
+      <div class="progress-wrap" style="margin-top:8px"><div class="progress-fill" id="squat-prog" style="width:0%"></div></div>
+    </div>
+    <div class="ex-item">
+      <div class="flex-sb"><div class="ex-name">B. Sentadilla pausa (3s)</div><span class="tag tag-o">Accesorio</span></div>
+      <div class="ex-detail">3 × 4 @ 75% del principal · Descanso: 3 min</div>
+      <div class="ex-tags"><span class="tag tag-g">Técnica</span><span class="tag tag-b">Hole position</span></div>
+    </div>
+    <div class="ex-item">
+      <div class="flex-sb"><div class="ex-name">C. Prensa 45°</div><span class="tag tag-o">Accesorio</span></div>
+      <div class="ex-detail">3 × 10–12 @ RPE 7 · Descanso: 2 min</div>
+      <div class="ex-tags"><span class="tag tag-g">Hipertrofia</span><span class="tag tag-b">Cuádriceps</span></div>
+    </div>
+    <div class="ex-item">
+      <div class="flex-sb"><div class="ex-name">D. Femoral tumbado</div><span class="tag tag-o">Accesorio</span></div>
+      <div class="ex-detail">3 × 10–12 @ RPE 7 · Descanso: 90s</div>
+      <div class="ex-tags"><span class="tag tag-g">Hipertrofia</span><span class="tag tag-b">Isquios</span></div>
+    </div>
+    <div class="ex-item">
+      <div class="flex-sb"><div class="ex-name">E. Elevación de gemelo</div><span class="tag tag-o">Accesorio</span></div>
+      <div class="ex-detail">4 × 15–20 @ RPE 8 · Descanso: 60s</div>
+      <div class="ex-tags"><span class="tag tag-g">Hipertrofia</span><span class="tag tag-b">Tríceps sural</span></div>
+    </div>
+
+    <div class="section-label">Retroalimentación del bloque</div>
+    <div class="fb-card good">
+      <div class="fb-title">Inicio del bloque — fase de acumulación</div>
+      <div class="fb-body">Mantén el RPE conservador (7–8). El objetivo ahora es adaptación y volumen, no maximalidad. El cuerpo aún está asimilando el estímulo del bloque anterior.</div>
+    </div>
+    <div class="fb-card info">
+      <div class="fb-title">Recuperación y sueño</div>
+      <div class="fb-body">Duerme 7–9h. La síntesis de GH ocurre principalmente en fase NREM III–IV. Sin sueño, no hay supercompensación muscular.</div>
+    </div>
+  </div>
+
+  <!-- PROGRAMA -->
+  <div class="screen" id="screen-program">
+    <div class="pill">📊 Periodización por bloques — 4 bloques × 4 semanas</div>
+
+    <div class="section-label">Macrociclo (16 semanas)</div>
+    <div class="card">
+      <div class="flex-sb" style="margin-bottom:8px"><div><div class="title">Bloque 1 · Acumulación</div><div class="sub">Sem 1–4 · Vol alto, intensidad moderada</div></div><span class="tag tag-g">Actual</span></div>
+      <div class="sub">4–5 × 5–8 reps · RPE 7–8.5</div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:12%"></div></div>
+    </div>
+    <div class="card">
+      <div class="title">Bloque 2 · Intensificación</div>
+      <div class="sub" style="margin:4px 0">Sem 5–8 · Vol moderado, intensidad alta</div>
+      <div class="sub">4 × 3–5 reps · RPE 8–9</div>
+    </div>
+    <div class="card">
+      <div class="title">Bloque 3 · Peaking</div>
+      <div class="sub" style="margin:4px 0">Sem 9–12 · Vol bajo, intensidad máxima</div>
+      <div class="sub">3–5 × 1–3 reps · RPE 9–9.5</div>
+    </div>
+    <div class="card">
+      <div class="title">Bloque 4 · Deload + Test de PRs</div>
+      <div class="sub" style="margin:4px 0">Sem 13–14 · Recuperación + máximos</div>
+      <div class="sub">Vol −40% · Test 1–5RM en ejercicios principales</div>
+    </div>
+
+    <div class="section-label">Distribución semanal</div>
+
+    <!-- Days -->
+    <div class="day-header" style="background:var(--accent-light)" onclick="toggleDay('mon')">
+      <div><div class="day-name">Lunes — Piernas (Squat)</div><div class="day-type">~90 min</div></div>
+      <span class="chevron" id="ch-mon">▾</span>
+    </div>
+    <div id="day-mon" style="display:none;padding:0 4px 8px">
+      <div class="ex-item"><div class="ex-name">A. Sentadilla (principal)</div><div class="ex-detail">Blq1: 4×5 · Blq2: 4×3 · Blq3: 3×1–2</div></div>
+      <div class="ex-item"><div class="ex-name">B. Sentadilla pausa / Box squat</div><div class="ex-detail">Variante técnica 3×4 @75%</div></div>
+      <div class="ex-item"><div class="ex-name">C–E. Prensa · Femoral · Gemelo</div><div class="ex-detail">3×10–15 · Hipertrofia</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--blue-light)" onclick="toggleDay('tue')">
+      <div><div class="day-name">Martes — Empuje (Bench)</div><div class="day-type">~85 min</div></div>
+      <span class="chevron" id="ch-tue">▾</span>
+    </div>
+    <div id="day-tue" style="display:none;padding:0 4px 8px">
+      <div class="ex-item"><div class="ex-name">A. Press banca plano (principal)</div><div class="ex-detail">Blq1: 4×5 · Blq2: 4×3 · Blq3: 3×1–2</div></div>
+      <div class="ex-item"><div class="ex-name">B. Press banca pausa / Close-grip</div><div class="ex-detail">3×5 @75–80%</div></div>
+      <div class="ex-item"><div class="ex-name">C. Press militar</div><div class="ex-detail">3×6–8 · Fuerza hombro</div></div>
+      <div class="ex-item"><div class="ex-name">D–F. Fondos · Trícep · Lateral</div><div class="ex-detail">Accesorios hipertrofia</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--purple-light)" onclick="toggleDay('wed')">
+      <div><div class="day-name">Miércoles — Jalón (Dominadas)</div><div class="day-type">~85 min</div></div>
+      <span class="chevron" id="ch-wed">▾</span>
+    </div>
+    <div id="day-wed" style="display:none;padding:0 4px 8px">
+      <div class="ex-item"><div class="ex-name">A. Dominadas con lastre (principal)</div><div class="ex-detail">Blq1: 4×5 · Blq2: 4×3 · Blq3: 3×1–2</div></div>
+      <div class="ex-item"><div class="ex-name">B. Remo en barra</div><div class="ex-detail">3×6–8 · Espalda dorsal + retractores</div></div>
+      <div class="ex-item"><div class="ex-name">C–E. Curl · Face pull · Remo uni</div><div class="ex-detail">Accesorios bícep y hombro posterior</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--bg2)" onclick="toggleDay('thu')">
+      <div><div class="day-name">Jueves — Descanso activo</div><div class="day-type">Movilidad / Cardio ligero</div></div>
+      <span class="chevron" id="ch-thu">▾</span>
+    </div>
+    <div id="day-thu" style="display:none;padding:0 4px 8px">
+      <div class="fb-card info"><div class="fb-title">Protocolo de recuperación</div><div class="fb-body">20–30 min caminata o bicicleta suave. Movilidad de cadera, tobillo y hombro. Foam roller en cuádriceps e isquiotibiales.</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--danger-light)" onclick="toggleDay('fri')">
+      <div><div class="day-name">Viernes — Piernas (Deadlift)</div><div class="day-type">~90 min</div></div>
+      <span class="chevron" id="ch-fri">▾</span>
+    </div>
+    <div id="day-fri" style="display:none;padding:0 4px 8px">
+      <div class="ex-item"><div class="ex-name">A. Peso muerto conv. (principal)</div><div class="ex-detail">Blq1: 3×4 · Blq2: 3×2–3 · Blq3: 2×1</div></div>
+      <div class="ex-item"><div class="ex-name">B. Peso muerto rumano (RDL)</div><div class="ex-detail">3×8 · Isquios y glúteo en elongación</div></div>
+      <div class="ex-item"><div class="ex-name">C–E. Hip thrust · Abdomen · Good morning</div><div class="ex-detail">Accesorios cadena posterior</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--warn-light)" onclick="toggleDay('sat')">
+      <div><div class="day-name">Sábado — Torso completo</div><div class="day-type">~100 min</div></div>
+      <span class="chevron" id="ch-sat">▾</span>
+    </div>
+    <div id="day-sat" style="display:none;padding:0 4px 8px">
+      <div class="ex-item"><div class="ex-name">A. Fondos con lastre</div><div class="ex-detail">3×6–8 · Pecho inferior + trícep</div></div>
+      <div class="ex-item"><div class="ex-name">B. Press militar</div><div class="ex-detail">3×5–8 · Deltoides + trapecios</div></div>
+      <div class="ex-item"><div class="ex-name">C. Dominadas pronación (sin lastre)</div><div class="ex-detail">3×8–12 · Hipertrofia dorsal</div></div>
+      <div class="ex-item"><div class="ex-name">D–F. Curl · Press inclinado · Lateral</div><div class="ex-detail">Accesorios hipertrofia</div></div>
+    </div>
+
+    <div class="day-header" style="background:var(--bg2)" onclick="toggleDay('sun')">
+      <div><div class="day-name">Domingo — Descanso total</div><div class="day-type">Recuperación</div></div>
+      <span class="chevron" id="ch-sun">▾</span>
+    </div>
+    <div id="day-sun" style="display:none;padding:0 4px 8px">
+      <div class="fb-card good"><div class="fb-title">Descanso es entrenamiento</div><div class="fb-body">La supercompensación ocurre durante el descanso, no durante la sesión. Respetar este día es parte del programa.</div></div>
+    </div>
+  </div>
+
+  <!-- REGISTRAR -->
+  <div class="screen" id="screen-log">
+    <div class="section-label">Registrar serie</div>
+    <div class="card">
+      <div class="input-row">
+        <label class="label">Ejercicio</label>
+        <select id="log-ex" onchange="calcLogE1RM()">
+          <option>Sentadilla</option>
+          <option>Press banca plano</option>
+          <option>Peso muerto convencional</option>
+          <option>Dominadas con lastre</option>
+          <option>Press militar</option>
+          <option>Fondos con lastre</option>
+          <option>Remo en barra</option>
+        </select>
+      </div>
+      <div class="sets-row">
+        <div>
+          <label class="label">Peso (kg)</label>
+          <input type="number" id="log-kg" placeholder="120" inputmode="decimal" oninput="calcLogE1RM()">
+        </div>
+        <div>
+          <label class="label">Reps</label>
+          <input type="number" id="log-reps" placeholder="5" inputmode="numeric" oninput="calcLogE1RM()">
+        </div>
+        <div>
+          <label class="label">Series</label>
+          <input type="number" id="log-sets" placeholder="4" inputmode="numeric">
+        </div>
+      </div>
+
+      <label class="label">RPE percibido</label>
+      <div class="rpe-scale" id="rpe-scale">
+        <div class="rpe-dot" style="background:#9FE1CB" onclick="selRPE(6,this)" data-v="6"></div>
+        <div class="rpe-dot" style="background:#5DCAA5" onclick="selRPE(7,this)" data-v="7"></div>
+        <div class="rpe-dot" style="background:#FAC775" onclick="selRPE(7.5,this)" data-v="7.5"></div>
+        <div class="rpe-dot" style="background:#EF9F27" onclick="selRPE(8,this)" data-v="8"></div>
+        <div class="rpe-dot" style="background:#F09595" onclick="selRPE(8.5,this)" data-v="8.5"></div>
+        <div class="rpe-dot" style="background:#E24B4A" onclick="selRPE(9,this)" data-v="9"></div>
+        <div class="rpe-dot" style="background:#A32D2D" onclick="selRPE(9.5,this)" data-v="9.5"></div>
+        <div class="rpe-dot" style="background:#501313" onclick="selRPE(10,this)" data-v="10"></div>
+      </div>
+      <div class="rpe-labels"><span>Fácil (6)</span><span id="rpe-display" style="color:var(--accent);font-weight:600">—</span><span>Máx (10)</span></div>
+    </div>
+
+    <div class="e1rm-box" id="e1rm-box" style="display:none">
+      <div class="e1rm-val" id="e1rm-val">—</div>
+      <div class="e1rm-label">1RM estimado (fórmula Epley)</div>
+      <div class="e1rm-formula" id="e1rm-formula"></div>
+    </div>
+    <div id="rep-table-wrap" style="display:none">
+      <div class="section-label">Cargas por rango de reps</div>
+      <div class="rep-grid" id="rep-grid"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveLog()">✓ Guardar serie</button>
+    <button class="btn" onclick="showTab('tools');setPreset(240)">⏱ Iniciar descanso (4 min)</button>
+
+    <div class="section-label">Historial de hoy</div>
+    <div id="log-history"><div style="color:var(--txt2);font-size:13px;text-align:center;padding:16px">Sin registros aún</div></div>
+  </div>
+
+  <!-- PROGRESO -->
+  <div class="screen" id="screen-progress">
+    <div class="section-label">Tus PRs actuales</div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-val">165</div><div class="metric-label">Sentadilla (kg)</div><div class="metric-delta">PR: 4 × 165</div></div>
+      <div class="metric-card"><div class="metric-val">130</div><div class="metric-label">Press banca (kg)</div><div class="metric-delta">PR: 3 × 130</div></div>
+      <div class="metric-card"><div class="metric-val">220</div><div class="metric-label">Peso muerto (kg)</div><div class="metric-delta">PR: 2 × 220</div></div>
+      <div class="metric-card"><div class="metric-val">+50</div><div class="metric-label">Lastre dominadas</div><div class="metric-delta">PR: 3 × +50</div></div>
+    </div>
+
+    <div class="section-label">1RM estimados (Epley)</div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-val">186</div><div class="metric-label">Sentadilla e1RM</div></div>
+      <div class="metric-card"><div class="metric-val">144</div><div class="metric-label">Banca e1RM</div></div>
+      <div class="metric-card"><div class="metric-val">235</div><div class="metric-label">Muerto e1RM</div></div>
+      <div class="metric-card"><div class="metric-val" style="font-size:18px">Avanzado</div><div class="metric-label">Nivel general</div></div>
+    </div>
+
+    <div class="section-label">Volumen semanal — Sentadilla</div>
+    <div class="chart-wrap">
+      <div class="chart-bar-col"><div class="chart-val-lbl">12.4t</div><div class="chart-bar" style="height:55%;background:var(--accent)"></div><div class="chart-lbl">S1</div></div>
+      <div class="chart-bar-col"><div class="chart-val-lbl">13.8t</div><div class="chart-bar" style="height:63%;background:var(--accent)"></div><div class="chart-lbl">S2</div></div>
+      <div class="chart-bar-col"><div class="chart-val-lbl">15.2t</div><div class="chart-bar" style="height:71%;background:var(--accent)"></div><div class="chart-lbl">S3</div></div>
+      <div class="chart-bar-col"><div class="chart-val-lbl">16.5t</div><div class="chart-bar" style="height:78%;background:var(--accent)"></div><div class="chart-lbl">S4</div></div>
+      <div class="chart-bar-col"><div class="chart-val-lbl">9.5t</div><div class="chart-bar" style="height:40%;background:#B4B2A9"></div><div class="chart-lbl">Deload</div></div>
+    </div>
+
+    <div class="section-label">Proyección de PRs (16 sem)</div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="flex-sb"><div><div class="sub">Sentadilla</div><div class="title">185–192 kg × 1</div></div><span class="tag tag-g">+12–16%</span></div>
+        <div class="divider" style="margin:0"></div>
+        <div class="flex-sb"><div><div class="sub">Press banca</div><div class="title">145–152 kg × 1</div></div><span class="tag tag-g">+11–17%</span></div>
+        <div class="divider" style="margin:0"></div>
+        <div class="flex-sb"><div><div class="sub">Peso muerto</div><div class="title">245–255 kg × 1</div></div><span class="tag tag-g">+11–16%</span></div>
+        <div class="divider" style="margin:0"></div>
+        <div class="flex-sb"><div><div class="sub">Dominadas lastre</div><div class="title">60–65 kg × 1</div></div><span class="tag tag-g">+20–30%</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">Feedback del bloque</div>
+    <div class="fb-card good">
+      <div class="fb-title">Progresión en sentadilla</div>
+      <div class="fb-body">165 kg × 4 → objetivo al final del Bloque 1: 170–175 kg × 5. Incrementa 2.5 kg/semana si RPE ≤ 8.</div>
+    </div>
+    <div class="fb-card warn">
+      <div class="fb-title">Monitorea la recuperación</div>
+      <div class="fb-body">Si el RPE percibido sube sin cambio de carga, considera un micro-deload del 10% antes del Bloque 2.</div>
+    </div>
+    <div class="fb-card info">
+      <div class="fb-title">Ratios de fuerza actuales</div>
+      <div class="fb-body">Sentadilla: 1.75× PC · Banca: 1.38× PC · Muerto: 2.34× PC. Nivel clasificado como avanzado en los tres movimientos.</div>
+    </div>
+  </div>
+
+  <!-- TOOLS -->
+  <div class="screen" id="screen-tools">
+    <div class="section-label">Calculadora 1RM</div>
+    <div class="card">
+      <div class="sets-row" style="grid-template-columns:1fr 1fr">
+        <div><label class="label">Peso (kg)</label><input type="number" id="calc-kg" placeholder="130" inputmode="decimal" oninput="calcTool()"></div>
+        <div><label class="label">Reps</label><input type="number" id="calc-reps" placeholder="3" inputmode="numeric" oninput="calcTool()"></div>
+      </div>
+      <div id="calc-result" style="text-align:center;color:var(--txt2);font-size:13px;padding:8px 0">Ingresa peso y reps</div>
+      <div id="calc-table" style="display:none">
+        <div class="divider"></div>
+        <div class="rep-grid" id="calc-grid"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Temporizador de descanso</div>
+    <div class="card">
+      <div class="timer-presets">
+        <div class="timer-btn" onclick="setPreset(60)">1:00</div>
+        <div class="timer-btn" onclick="setPreset(90)">1:30</div>
+        <div class="timer-btn" onclick="setPreset(120)">2:00</div>
+        <div class="timer-btn" onclick="setPreset(180)">3:00</div>
+        <div class="timer-btn active-preset" id="preset-240" onclick="setPreset(240)">4:00</div>
+      </div>
+      <div class="timer-display" id="timer-disp">4:00</div>
+      <div class="timer-lbl">Descanso recomendado: 4 min (principal) · 2 min (accesorio)</div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">
+        <button class="btn btn-primary" id="timer-btn" onclick="toggleTimer()" style="margin:0">▶ Iniciar</button>
+        <button class="btn" onclick="resetTimer()" style="margin:0">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section-label">Guía de RPE</div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="flex"><span class="tag tag-g" style="min-width:56px;text-align:center">RPE 6</span><span style="font-size:13px;color:var(--txt2)">Muy fácil · sobran 4+ reps</span></div>
+        <div class="flex"><span class="tag tag-g" style="min-width:56px;text-align:center">RPE 7</span><span style="font-size:13px;color:var(--txt2)">Moderado · sobran 3 reps</span></div>
+        <div class="flex"><span class="tag tag-o" style="min-width:56px;text-align:center">RPE 8</span><span style="font-size:13px;color:var(--txt2)">Difícil · sobran 2 reps</span></div>
+        <div class="flex"><span class="tag tag-o" style="min-width:56px;text-align:center">RPE 8.5</span><span style="font-size:13px;color:var(--txt2)">Muy difícil · sobra 1–2</span></div>
+        <div class="flex"><span class="tag tag-r" style="min-width:56px;text-align:center">RPE 9</span><span style="font-size:13px;color:var(--txt2)">Casi máximo · sobra 1</span></div>
+        <div class="flex"><span class="tag tag-r" style="min-width:56px;text-align:center">RPE 10</span><span style="font-size:13px;color:var(--txt2)">Máximo · no quedan reps</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">Calculadora de volumen</div>
+    <div class="card">
+      <div class="sets-row">
+        <div><label class="label">Series</label><input type="number" id="vs" placeholder="4" inputmode="numeric" oninput="calcVol()"></div>
+        <div><label class="label">Reps</label><input type="number" id="vr" placeholder="5" inputmode="numeric" oninput="calcVol()"></div>
+        <div><label class="label">Kg</label><input type="number" id="vk" placeholder="145" inputmode="decimal" oninput="calcVol()"></div>
+      </div>
+      <div id="vol-result" style="font-size:16px;font-weight:600;color:var(--txt);text-align:center;padding:6px">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// TABS
+function showTab(id) {
+  ['today','program','log','progress','tools'].forEach((s,i) => {
+    document.getElementById('screen-' + s).classList.toggle('active', s === id);
+    document.querySelectorAll('.tab')[i].classList.toggle('active', s === id);
+  });
+}
+
+// DAYS
+function toggleDay(d) {
+  const el = document.getElementById('day-' + d);
+  const ch = document.getElementById('ch-' + d);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  ch.classList.toggle('open', !open);
+}
+
+// GO TO LOG WITH EXERCISE
+function goLog(ex) {
+  document.getElementById('log-ex').value = ex;
+  showTab('log');
+}
+
+// EPLEY
+function epley(w, r) { return r === 1 ? w : Math.round(w * (1 + r / 30)); }
+const REPS_PCT = [[1,1],[2,0.97],[3,0.94],[4,0.92],[5,0.89],[6,0.86],[8,0.81],[10,0.75],[12,0.70],[15,0.64],[20,0.57]];
+
+function buildGrid(gridId, e1rm) {
+  const g = document.getElementById(gridId);
+  g.innerHTML = REPS_PCT.map(([r,p]) => {
+    const kg = Math.round(e1rm * p / 2.5) * 2.5;
+    return `<div class="rep-cell"><div class="reps">${r} rep${r>1?'s':''}</div><div class="weight">${kg} kg</div></div>`;
+  }).join('');
+}
+
+// LOG E1RM
+function calcLogE1RM() {
+  const w = parseFloat(document.getElementById('log-kg').value);
+  const r = parseFloat(document.getElementById('log-reps').value);
+  const box = document.getElementById('e1rm-box');
+  const tbl = document.getElementById('rep-table-wrap');
+  if (w > 0 && r > 0) {
+    const e = epley(w, r);
+    document.getElementById('e1rm-val').textContent = e + ' kg';
+    document.getElementById('e1rm-formula').textContent = `${w} × (1 + ${r}/30) ≈ ${e} kg`;
+    box.style.display = 'block';
+    buildGrid('rep-grid', e);
+    tbl.style.display = 'block';
+  } else { box.style.display = 'none'; tbl.style.display = 'none'; }
+}
+
+// TOOL CALC
+function calcTool() {
+  const w = parseFloat(document.getElementById('calc-kg').value);
+  const r = parseFloat(document.getElementById('calc-reps').value);
+  const res = document.getElementById('calc-result');
+  const tbl = document.getElementById('calc-table');
+  if (w > 0 && r > 0) {
+    const e = epley(w, r);
+    res.innerHTML = `<span style="font-size:28px;font-weight:700;color:var(--txt)">${e} kg</span><br><span style="font-size:12px;color:var(--txt2)">1RM estimado</span>`;
+    buildGrid('calc-grid', e);
+    tbl.style.display = 'block';
+  } else { res.textContent = 'Ingresa peso y reps'; tbl.style.display = 'none'; }
+}
+
+// VOL
+function calcVol() {
+  const s = parseFloat(document.getElementById('vs').value);
+  const r = parseFloat(document.getElementById('vr').value);
+  const k = parseFloat(document.getElementById('vk').value);
+  const el = document.getElementById('vol-result');
+  if (s > 0 && r > 0 && k > 0) {
+    el.textContent = (s * r * k).toLocaleString('es-CL') + ' kg totales · ' + (s * r) + ' reps';
+  } else el.textContent = '—';
+}
+
+// RPE
+let selRPEVal = null;
+function selRPE(v, el) {
+  selRPEVal = v;
+  document.querySelectorAll('.rpe-dot').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('rpe-display').textContent = 'RPE ' + v;
+}
+
+// LOG
+let logs = [];
+function saveLog() {
+  const ex = document.getElementById('log-ex').value;
+  const w = parseFloat(document.getElementById('log-kg').value);
+  const r = parseFloat(document.getElementById('log-reps').value);
+  const s = parseFloat(document.getElementById('log-sets').value) || 1;
+  if (!w || !r) { alert('Ingresa peso y repeticiones'); return; }
+  const now = new Date();
+  logs.unshift({ ex, w, r, s, rpe: selRPEVal, time: now.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'}) });
+  renderLogs();
+  localStorage.setItem('pb_logs', JSON.stringify(logs.slice(0, 50)));
+  document.getElementById('log-kg').value = '';
+  document.getElementById('log-reps').value = '';
+  calcLogE1RM();
+}
+function renderLogs() {
+  const el = document.getElementById('log-history');
+  if (!logs.length) { el.innerHTML = '<div style="color:var(--txt2);font-size:13px;text-align:center;padding:16px">Sin registros aún</div>'; return; }
+  el.innerHTML = logs.slice(0,10).map(l => `
+    <div class="log-entry">
+      <div class="log-date">${l.time} · ${l.ex}</div>
+      <div class="log-val">${l.s}×${l.r} @ ${l.w} kg${l.rpe ? ' · RPE ' + l.rpe : ''}</div>
+      ${l.r > 1 ? `<div class="log-note">e1RM: ~${epley(l.w, l.r)} kg</div>` : ''}
+    </div>`).join('');
+}
+
+// Load saved logs
+try { const saved = localStorage.getItem('pb_logs'); if (saved) { logs = JSON.parse(saved); renderLogs(); } } catch(e) {}
+
+// TIMER
+let timerSecs = 240, timerRunning = false, timerInterval = null;
+function setPreset(s) {
+  document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active-preset'));
+  const id = 'preset-' + s;
+  if (document.getElementById(id)) document.getElementById(id).classList.add('active-preset');
+  timerSecs = s;
+  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-btn').textContent = '▶ Iniciar'; }
+  updateTimerDisp();
+}
+function updateTimerDisp() {
+  const m = Math.floor(timerSecs / 60);
+  const s = timerSecs % 60;
+  document.getElementById('timer-disp').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+}
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    document.getElementById('timer-btn').textContent = '▶ Reanudar';
+  } else {
+    if (timerSecs <= 0) resetTimer();
+    timerRunning = true;
+    document.getElementById('timer-btn').textContent = '⏸ Pausar';
+    timerInterval = setInterval(() => {
+      timerSecs--;
+      updateTimerDisp();
+      if (timerSecs <= 0) {
+        clearInterval(timerInterval); timerRunning = false;
+        document.getElementById('timer-disp').textContent = '✓ Listo';
+        document.getElementById('timer-btn').textContent = '▶ Iniciar';
+        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+      }
+    }, 1000);
+  }
+}
+function resetTimer() {
+  clearInterval(timerInterval); timerRunning = false; timerSecs = 240;
+  updateTimerDisp();
+  document.getElementById('timer-btn').textContent = '▶ Iniciar';
+}
+updateTimerDisp();
+</script>
+</body>
+</html>
